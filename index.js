@@ -1,5 +1,5 @@
 const express = require("express");
-const cors_proxy = require("cors-anywhere");
+const { createServer } = require("cors-anywhere");
 
 const app = express();
 
@@ -9,7 +9,15 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(cors_proxy());
+const proxy = createServer({
+  originWhitelist: [], // Deja vacío para permitir todos los orígenes
+  requireHeader: ["origin", "x-requested-with"], // Requerir encabezados 'origin' y 'x-requested-with'
+});
+
+app.use("/", (req, res) => {
+  req.url = req.url.replace("/", ""); // Eliminar la barra inicial para evitar problemas de redirección
+  proxy.emit("request", req, res);
+});
 
 const port = 8080; // Puedes cambiar el puerto si lo deseas
 
